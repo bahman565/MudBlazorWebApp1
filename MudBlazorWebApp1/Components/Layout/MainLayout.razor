@@ -1,0 +1,124 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudStaticNavDrawerToggle DrawerId="nav-drawer" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" />
+        <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
+        <MudSpacer />
+        <div style="width:100px">
+            <AuthorizeView>
+                <form action="Account/Logout" method="post">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+                    <button type="submit" class="mud-nav-link mud-ripple">
+                        <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Class="mr-3"></MudIcon> Logout
+                    </button>
+                </form>
+
+            </AuthorizeView>
+        </div>
+        <div style="width:50px">
+        <MudMenu Dense
+                 Variant="Variant.Text"
+                     Size="MudBlazor.Size.Medium"
+                 Color="Color.Inherit"
+                 Icon="@Icons.Material.TwoTone.MoreVert">
+
+            <MudMenu StartIcon="@Icons.Material.TwoTone.Settings"
+                     IconColor="Color.Primary"
+                     Label="Settings">
+                <MudMenuItem Icon="@Icons.Material.TwoTone.DarkMode"
+                             IconColor="Color.Secondary"
+                             Label="Dark Theme" />
+            </MudMenu>
+
+            <MudDivider />
+
+                <AuthorizeView>
+                    <Authorized>
+                        <!-- وقتی لاگین است: Login/Register دیزایبل -->
+                        <MudMenuItem Href="Account/Login"
+                                     ForceLoad
+                                     Icon="@Icons.Material.TwoTone.Login"
+                                     IconColor="Color.Primary"
+                                     Label="Sign In"
+                                     Disabled="true" />
+
+                        <MudMenuItem Href="Account/Register"
+                                     ForceLoad
+                                     Icon="@Icons.Material.TwoTone.Person"
+                                     IconColor="Color.Primary"
+                                     Label="Register"
+                                     Disabled="true" />
+                    </Authorized>
+
+                    <NotAuthorized>
+                        <!-- وقتی لاگین نیست: فعال -->
+                        <MudMenuItem Href="Account/Login"
+                                     ForceLoad
+                                     Icon="@Icons.Material.TwoTone.Login"
+                                     IconColor="Color.Primary"
+                                     Label="Sign In"
+                                     Disabled="false" />
+
+                        <MudMenuItem Href="Account/Register"
+                                     ForceLoad
+                                     Icon="@Icons.Material.TwoTone.Person"
+                                     IconColor="Color.Primary"
+                                     Label="Register"
+                                     Disabled="false" />
+                    </NotAuthorized>
+                </AuthorizeView>
+        </MudMenu>
+        
+        </div> 
+        
+    </MudAppBar>
+    <MudDrawer id="nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Breakpoint="Breakpoint.Sm" Elevation="2" Variant="@DrawerVariant.Mini">
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent Class="pt-16 pa-4">
+        @Body
+        
+    </MudMainContent>
+</MudLayout>
+
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    
+    private bool _drawerOpen = true;
+
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+   
+}
+
+

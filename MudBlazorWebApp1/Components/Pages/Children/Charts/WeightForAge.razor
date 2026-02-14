@@ -1,0 +1,122 @@
+﻿@page "/children/{Id:int}/charts/weight-for-age"
+@using MudBlazorWebApp1.Models
+@using MudBlazorWebApp1.Services
+@inject ChildService ChildService
+@inject UserContext UserContext
+@inject GrowthReferenceQueryService RefService
+
+<MudText Typo="Typo.h5" Class="mb-2">نمودار وزن به سن</MudText>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_child is null)
+{
+    <MudAlert Severity="Severity.Error">کودک پیدا نشد.</MudAlert>
+}
+else
+{
+    <MudText Typo="Typo.subtitle2" Class="mb-4">
+        @_child.Name — @(_child.Gender == ChildGender.Male ? "پسر" : "دختر")
+    </MudText>
+
+    <ApexCharts.ApexChart TItem="Point"
+                          Title="Weight-for-Age (Mashhad)"
+                          Options="_options"
+                          Height="380">
+
+        <ApexCharts.ApexPointSeries TItem="Point"
+                                    Name="P3"
+                                    Items="_p3"
+                                    XValue="p => p.X"
+                                    YValue="p => p.Y" />
+
+        <ApexCharts.ApexPointSeries TItem="Point"
+                                    Name="P50"
+                                    Items="_p50"
+                                    XValue="p => p.X"
+                                    YValue="p => p.Y" />
+
+        <ApexCharts.ApexPointSeries TItem="Point"
+                                    Name="P97"
+                                    Items="_p97"
+                                    XValue="p => p.X"
+                                    YValue="p => p.Y" />
+
+        <ApexCharts.ApexScatterSeries TItem="Point"
+                                      Name="کودک"
+                                      Items="_childPoints"
+                                      XValue="p => p.X"
+                                      YValue="p => p.Y" />
+    </ApexCharts.ApexChart>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool _loading = true;
+    private Child? _child;
+
+    private List<Point> _p3 = new();
+    private List<Point> _p50 = new();
+    private List<Point> _p97 = new();
+    private List<Point> _childPoints = new();
+
+    private ApexCharts.ApexChartOptions<Point> _options = new()
+    {
+        Chart = new ApexCharts.Chart
+        {
+            Toolbar = new ApexCharts.Toolbar { Show = true },
+            Zoom = new ApexCharts.Zoom { Enabled = true }
+        },
+        Xaxis = new ApexCharts.XAxis
+        {
+            Title = new ApexCharts.AxisTitle { Text = "سن (ماه)" }
+        },
+        Yaxis = new List<ApexCharts.YAxis>
+        {
+            new ApexCharts.YAxis { Title = new ApexCharts.AxisTitle { Text = "وزن (Kg)" } }
+        },
+        Stroke = new ApexCharts.Stroke { Curve = ApexCharts.Curve.Straight },
+        Legend = new ApexCharts.Legend { Show = true, Position = ApexCharts.LegendPosition.Top }
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+
+        var userId = await UserContext.GetUserIdAsync();
+        _child = await ChildService.GetChildAsync(Id, userId);
+
+        if (_child is null)
+        {
+            _loading = false;
+            return;
+        }
+
+        var refs = await RefService.GetAsync(
+            ReferenceSource.Mashhad,
+            GrowthMetric.WeightForAge,
+            _child.Gender);
+
+        _p3 = refs.Where(r => r.P3.HasValue).Select(r => new Point(r.X, r.P3!.Value)).ToList();
+        _p50 = refs.Where(r => r.P50.HasValue).Select(r => new Point(r.X, r.P50!.Value)).ToList();
+        _p97 = refs.Where(r => r.P97.HasValue).Select(r => new Point(r.X, r.P97!.Value)).ToList();
+
+        _childPoints = _child.Measurements
+            .Where(m => m.WeightKg > 0)
+            .OrderBy(m => m.MeasuredAtUtc)
+            .Select(m =>
+            {
+                var local = m.MeasuredAtUtc.ToLocalTime();
+                var ageMonths = AgeMath.AgeInMonths(_child.BirthDate, local); // decimal
+                return new Point(ageMonths, m.WeightKg);
+            })
+            .ToList();
+
+        _loading = false;
+    }
+
+    public record Point(decimal X, decimal Y);
+}

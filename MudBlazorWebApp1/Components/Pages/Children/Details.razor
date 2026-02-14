@@ -1,0 +1,137 @@
+﻿@page "/children/{Id:int}"
+@using MudBlazorWebApp1.Models
+@using MudBlazorWebApp1.Services
+@inject ChildService ChildService
+@inject UserContext UserContext
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_child is null)
+{
+    <MudAlert Severity="Severity.Error">کودک پیدا نشد.</MudAlert>
+}
+else
+{
+    <MudText Typo="Typo.h5">@_child.Name</MudText>
+    <MudText Typo="Typo.body2">
+        جنسیت: @( _child.Gender == ChildGender.Male ? "پسر" : "دختر" ) |
+        تولد: @_child.BirthDate
+    </MudText>
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.h6" Class="mb-2">ثبت اندازه‌گیری جدید</MudText>
+
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MudDatePicker Label="تاریخ اندازه‌گیری" Date="@_measuredAt" DateChanged="OnMeasuredAtChanged" Required="true" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudNumericField T="decimal" Label="وزن (کیلوگرم)" @bind-Value="_new.WeightKg" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudNumericField T="decimal" Label="قد/طول (سانتی‌متر)" @bind-Value="_new.LengthCm" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudNumericField T="decimal" Label="دور سر (سانتی‌متر)" @bind-Value="_new.HeadCircumferenceCm" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField Label="یادداشت" @bind-Value="_new.Note" Lines="2" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudButton Color="MudBlazor.Color.Primary" Variant="Variant.Filled" OnClick="AddMeasurementAsync">ثبت</MudButton>
+        </MudItem>
+    </MudGrid>
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.h6" Class="mb-2">لیست اندازه‌گیری‌ها</MudText>
+
+    @if (_child.Measurements.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info">هنوز اندازه‌گیری ثبت نشده است.</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="_child.Measurements" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh>تاریخ</MudTh>
+                <MudTh>وزن</MudTh>
+                <MudTh>قد/طول</MudTh>
+                <MudTh>دور سر</MudTh>
+                <MudTh>BMI</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.MeasuredAtUtc.ToLocalTime().ToString("yyyy-MM-dd")</MudTd>
+                <MudTd>@context.WeightKg</MudTd>
+                <MudTd>@context.LengthCm</MudTd>
+                <MudTd>@context.HeadCircumferenceCm</MudTd>
+                <MudTd>@(context.Bmi?.ToString("0.00") ?? "-")</MudTd>
+                <MudTd>
+                    <MudButton Size="Size.Small" Color="Color.Error" Variant="Variant.Text"
+                               OnClick="@(() => DeleteMeasurementAsync(context.Id))">
+                        حذف
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+}
+<MudButton Variant="Variant.Outlined"
+           Href="@($"/children/{_child!.Id}/charts/weight-for-age")">
+    نمودار وزن به سن
+</MudButton>
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool _loading = true;
+    private Child? _child;
+
+    private Measurement _new = new() { WeightKg = 3, LengthCm = 50, HeadCircumferenceCm = 35 };
+    private DateTime? _measuredAt = DateTime.Today;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+
+        var userId = await UserContext.GetUserIdAsync();
+        _child = await ChildService.GetChildAsync(Id, userId);
+
+        if (_child is not null)
+            _new.ChildId = _child.Id;
+
+        _loading = false;
+    }
+
+    private void OnMeasuredAtChanged(DateTime? dt) => _measuredAt = dt;
+
+    private async Task AddMeasurementAsync()
+    {
+        if (_child is null || _measuredAt is null) return;
+
+        _new.ChildId = _child.Id;
+        _new.MeasuredAtUtc = DateTime.SpecifyKind(_measuredAt.Value, DateTimeKind.Local).ToUniversalTime();
+
+        await ChildService.AddMeasurementAsync(_new);
+
+        _new = new Measurement { WeightKg = _new.WeightKg, LengthCm = _new.LengthCm, HeadCircumferenceCm = _new.HeadCircumferenceCm };
+        _measuredAt = DateTime.Today;
+
+        await LoadAsync();
+    }
+
+    private async Task DeleteMeasurementAsync(long measurementId)
+    {
+        var userId = await UserContext.GetUserIdAsync();
+        await ChildService.DeleteMeasurementAsync(measurementId, userId);
+        await LoadAsync();
+    }
+}

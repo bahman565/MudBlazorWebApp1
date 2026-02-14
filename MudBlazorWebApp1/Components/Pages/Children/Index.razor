@@ -1,0 +1,58 @@
+﻿@page "/children"
+@using MudBlazorWebApp1.Models
+@using MudBlazorWebApp1.Services
+@inject ChildService ChildService
+@inject UserContext UserContext
+@inject NavigationManager Nav
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <MudText Typo="Typo.h5">کودکان</MudText>
+    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" OnClick="@(() => Nav.NavigateTo("/children/new"))">
+        افزودن کودک
+    </MudButton>
+</MudStack>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_items.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">هنوز کودکی ثبت نشده است.</MudAlert>
+}
+else
+{
+    <MudTable Items="_items" Hover="true" Dense="true">
+        <HeaderContent>
+            <MudTh>نام</MudTh>
+            <MudTh>جنسیت</MudTh>
+            <MudTh>تاریخ تولد</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="نام">@context.Name</MudTd>
+            <MudTd DataLabel="جنسیت">@GenderFa(context.Gender)</MudTd>
+            <MudTd DataLabel="تولد">@context.BirthDate</MudTd>
+            <MudTd>
+                <MudButton Size="Size.Small" Variant="Variant.Outlined"
+                           OnClick="@(() => Nav.NavigateTo($"/children/{context.Id}"))">
+                    مشاهده
+                </MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    private bool _loading = true;
+    private List<Child> _items = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var userId = await UserContext.GetUserIdAsync();
+        _items = await ChildService.GetMyChildrenAsync(userId);
+        _loading = false;
+    }
+
+    private static string GenderFa(ChildGender g) => g == ChildGender.Male ? "پسر" : "دختر";
+}

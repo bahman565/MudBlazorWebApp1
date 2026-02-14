@@ -1,0 +1,53 @@
+﻿@page "/children/new"
+@using MudBlazorWebApp1.Models
+@using MudBlazorWebApp1.Services
+@inject ChildService ChildService
+@inject UserContext UserContext
+@inject NavigationManager Nav
+
+<MudText Typo="Typo.h5" Class="mb-4">افزودن کودک</MudText>
+
+<MudForm @ref="_form">
+    <MudTextField @bind-Value="_model.Name" Label="نام" Required="true" Immediate="true" />
+
+    <MudSelect T="ChildGender" @bind-Value="_model.Gender" Label="جنسیت" Required="true">
+        <MudSelectItem Value="ChildGender.Male">پسر</MudSelectItem>
+        <MudSelectItem Value="ChildGender.Female">دختر</MudSelectItem>
+    </MudSelect>
+
+    <MudDatePicker Label="تاریخ تولد"
+                   Date="@_birthDate"
+                   DateChanged="OnBirthDateChanged"
+                   Required="true" />
+
+    <MudStack Row="true" Class="mt-4" Spacing="2">
+        <MudButton Color="MudBlazor.Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync">ذخیره</MudButton>
+        <MudButton Color="MudBlazor.Color.Default" Variant="Variant.Outlined" OnClick="@(() => Nav.NavigateTo("/children"))">انصراف</MudButton>
+    </MudStack>
+</MudForm>
+
+@code {
+    private MudForm? _form;
+    private Child _model = new() { Gender = ChildGender.Male };
+    private DateTime? _birthDate;
+
+    private void OnBirthDateChanged(DateTime? value)
+    {
+        _birthDate = value;
+        if (value.HasValue)
+            _model.BirthDate = DateOnly.FromDateTime(value.Value);
+    }
+
+    private async Task SaveAsync()
+    {
+        await _form!.Validate();
+        if (!_form.IsValid)
+            return;
+
+        var userId = await UserContext.GetUserIdAsync();
+        _model.OwnerUserId = userId;
+
+        var id = await ChildService.CreateChildAsync(_model);
+        Nav.NavigateTo($"/children/{id}");
+    }
+}
