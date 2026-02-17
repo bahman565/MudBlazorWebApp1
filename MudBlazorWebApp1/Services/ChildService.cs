@@ -34,6 +34,21 @@ public class ChildService
         _db.Measurements.Add(measurement);
         await _db.SaveChangesAsync(ct);
     }
+    public async Task UpdateChildAsync(Child child, CancellationToken ct = default)
+    {
+        _db.Children.Update(child);
+        await _db.SaveChangesAsync(ct);
+    }
+    public async Task DeleteChildAsync(int childId, string ownerUserId, CancellationToken ct = default)
+    {
+        var child = await _db.Children
+            .SingleOrDefaultAsync(c => c.Id == childId && c.OwnerUserId == ownerUserId, ct);
+        if (child == null)
+            return;
+
+        _db.Children.Remove(child);
+        await _db.SaveChangesAsync(ct);
+    }
 
     public async Task DeleteMeasurementAsync(long measurementId, string ownerUserId, CancellationToken ct = default)
     {

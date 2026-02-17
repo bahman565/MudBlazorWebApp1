@@ -1,0 +1,100 @@
+﻿@page "/children/edit/{Id:int}"
+@using MudBlazorWebApp1.Models
+@using MudBlazorWebApp1.Services
+@using MudBlazorWebApp1.Components
+@inject ChildService ChildService
+@inject UserContext UserContext
+@inject NavigationManager Nav
+@inject IDialogService DialogService
+@using System.ComponentModel.DataAnnotations;
+
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h6">ویرایش کودک</MudText>
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (_child is null)
+    {
+        <MudAlert Severity="Severity.Error">کودک یافت نشد!</MudAlert>
+    }
+    else
+    {
+        <EditForm Model="_editModel" OnValidSubmit="HandleValidSubmit">
+            <ValidationSummary />
+            <MudTextField @bind-Value="_editModel.Name" Label="نام" Required="true" />
+            <MudSelect T="ChildGender" @bind-Value="_editModel.Gender" Label="جنسیت" Required="true">
+                <MudSelectItem Value="ChildGender.Male">پسر</MudSelectItem>
+                <MudSelectItem Value="ChildGender.Female">دختر</MudSelectItem>
+            </MudSelect>
+            <MudDatePicker @bind-Date="_editModel.BirthDateGregorian" Label="تاریخ تولد (میلادی)" Required="true" />
+            <MudButton Variant="Variant.Filled" Color="Color.Tertiary" OnClick="HandleValidSubmit">ذخیره</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@GoToChildren">بازگشت</MudButton>
+            <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="OnDeleteAsync">حذف</MudButton>
+        </EditForm>
+    }
+</MudPaper>
+
+@code {
+       
+    [Parameter] public int Id { get; set; }
+
+    private Child? _child;
+    private EditChildModel _editModel = new();
+    private bool _loading = true;
+    private string _userId = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _userId = await UserContext.GetUserIdAsync();
+        _child = await ChildService.GetChildAsync(Id, _userId);
+
+        if (_child is not null)
+        {
+            _editModel = new EditChildModel
+            {
+                Name = _child.Name,
+                Gender = _child.Gender,
+                BirthDateGregorian = _child.BirthDate.ToDateTime(TimeOnly.MinValue)
+            };
+        }
+        _loading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+       
+        if (_child is not null && _editModel.BirthDateGregorian != null)
+        {
+            _child.Name = _editModel.Name;
+            _child.Gender = _editModel.Gender;
+            _child.BirthDate = DateOnly.FromDateTime(_editModel.BirthDateGregorian.Value);
+            _child.OwnerUserId = _userId;
+            await ChildService.UpdateChildAsync(_child);
+            Nav.NavigateTo("/children");
+        }
+    }
+
+    void GoToChildren() => Nav.NavigateTo("/children");
+
+    public class EditChildModel
+    {
+        [Required]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        public ChildGender Gender { get; set; }
+
+        [Required]
+        public DateTime? BirthDateGregorian { get; set; } = DateTime.Today;
+    }
+
+    private async Task OnDeleteAsync()
+    {        
+        if (_child is null) return;
+        await ChildService.DeleteChildAsync(_child.Id, _userId);
+        Nav.NavigateTo("/children");
+
+    }
+}

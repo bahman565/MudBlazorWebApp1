@@ -1,9 +1,11 @@
 ﻿@page "/children/new"
 @using MudBlazorWebApp1.Models
 @using MudBlazorWebApp1.Services
+@using MudBlazorWebApp1.Components
 @inject ChildService ChildService
 @inject UserContext UserContext
 @inject NavigationManager Nav
+
 
 <MudText Typo="Typo.h5" Class="mb-4">افزودن کودک</MudText>
 
@@ -18,11 +20,12 @@
     <MudDatePicker Label="تاریخ تولد"
                    Date="@_birthDate"
                    DateChanged="OnBirthDateChanged"
-                   Required="true" />
+                   Required="true"  />
+    
 
     <MudStack Row="true" Class="mt-4" Spacing="2">
         <MudButton Color="MudBlazor.Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync">ذخیره</MudButton>
-        <MudButton Color="MudBlazor.Color.Default" Variant="Variant.Outlined" OnClick="@(() => Nav.NavigateTo("/children"))">انصراف</MudButton>
+        <MudButton Color="MudBlazor.Color.Warning" Variant="Variant.Filled" OnClick="@(() => Nav.NavigateTo("/children"))">انصراف</MudButton>
     </MudStack>
 </MudForm>
 
@@ -50,4 +53,5 @@
         var id = await ChildService.CreateChildAsync(_model);
         Nav.NavigateTo($"/children/{id}");
     }
+    
 }

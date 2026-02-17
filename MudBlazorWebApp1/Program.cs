@@ -6,8 +6,14 @@ using MudBlazorWebApp1.Components;
 using MudBlazorWebApp1.Components.Account;
 using MudBlazorWebApp1.Data;
 using MudBlazorWebApp1.Services;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+CultureInfo persianCulture = new PersianCultureProvider().GetPersianCulture();
+CultureInfo.DefaultThreadCurrentCulture = persianCulture;
+CultureInfo.DefaultThreadCurrentUICulture = persianCulture;
+
 
 // Add MudBlazor services
 builder.Services.AddMudServices();

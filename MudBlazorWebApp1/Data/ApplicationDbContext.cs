@@ -15,6 +15,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<GrowthReferencePoint>().ToTable("GrowthReferencePoints");
+
         builder.Entity<GrowthReferencePoint>()
             .HasIndex(x => new { x.Source, x.Metric, x.Gender, x.X })
             .IsUnique();

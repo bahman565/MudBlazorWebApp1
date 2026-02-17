@@ -7,9 +7,11 @@
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
     <MudText Typo="Typo.h5">کودکان</MudText>
-    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Primary" OnClick="@(() => Nav.NavigateTo("/children/new"))">
-        افزودن کودک
-    </MudButton>
+    <div style="margin-top:10px">
+        <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Tertiary" OnClick="@(() => Nav.NavigateTo("/children/new"))">
+            افزودن کودک
+        </MudButton>
+    </div>
 </MudStack>
 
 @if (_loading)
@@ -34,9 +36,13 @@ else
             <MudTd DataLabel="جنسیت">@GenderFa(context.Gender)</MudTd>
             <MudTd DataLabel="تولد">@context.BirthDate</MudTd>
             <MudTd>
-                <MudButton Size="Size.Small" Variant="Variant.Outlined"
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="MudBlazor.Color.Secondary"
                            OnClick="@(() => Nav.NavigateTo($"/children/{context.Id}"))">
                     مشاهده
+                </MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="MudBlazor.Color.Info" Class="ml-2"
+                           OnClick="@(() => Nav.NavigateTo($"/children/edit/{context.Id}"))">
+                    ویرایش
                 </MudButton>
             </MudTd>
         </RowTemplate>

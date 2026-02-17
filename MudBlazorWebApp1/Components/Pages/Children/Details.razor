@@ -41,7 +41,7 @@ else
             <MudTextField Label="یادداشت" @bind-Value="_new.Note" Lines="2" />
         </MudItem>
         <MudItem xs="12">
-            <MudButton Color="MudBlazor.Color.Primary" Variant="Variant.Filled" OnClick="AddMeasurementAsync">ثبت</MudButton>
+            <MudButton Color="MudBlazor.Color.Tertiary" Variant="Variant.Filled" OnClick="AddMeasurementAsync">ثبت</MudButton>
         </MudItem>
     </MudGrid>
 
@@ -51,11 +51,11 @@ else
 
     @if (_child.Measurements.Count == 0)
     {
-        <MudAlert Severity="Severity.Info">هنوز اندازه‌گیری ثبت نشده است.</MudAlert>
+        <MudAlert Severity="Severity.Info"><h3>هنوز اندازه‌گیری ثبت نشده است.</h3></MudAlert>
     }
     else
     {
-        <MudTable Items="_child.Measurements" Dense="true" Hover="true">
+        <MudTable Items="_child.Measurements" Dense="true" Hover="true" Striped="true" >
             <HeaderContent>
                 <MudTh>تاریخ</MudTh>
                 <MudTh>وزن</MudTh>
@@ -80,10 +80,17 @@ else
         </MudTable>
     }
 }
-<MudButton Variant="Variant.Outlined"
-           Href="@($"/children/{_child!.Id}/charts/weight-for-age")">
-    نمودار وزن به سن
-</MudButton>
+@if (_child is not null)
+{
+    <MudButton Variant="Variant.Filled" Style="margin-top:10px" Color="Color.Primary" 
+               Href="@($"/children/{_child.Id}/charts/weight-for-age")">
+        نمودار وزن به سن
+    </MudButton>
+}
+else
+{
+    <MudProgressCircular Indeterminate="true" />
+}
 @code {
     [Parameter] public int Id { get; set; }
 
