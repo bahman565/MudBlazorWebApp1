@@ -29,9 +29,11 @@
                 <MudSelectItem Value="ChildGender.Female">دختر</MudSelectItem>
             </MudSelect>
             <MudDatePicker @bind-Date="_editModel.BirthDateGregorian" Label="تاریخ تولد (میلادی)" Required="true" />
+            <div style="margin-top:10px">
             <MudButton Variant="Variant.Filled" Color="Color.Tertiary" OnClick="HandleValidSubmit">ذخیره</MudButton>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@GoToChildren">بازگشت</MudButton>
             <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="OnDeleteAsync">حذف</MudButton>
+            </div>
         </EditForm>
     }
 </MudPaper>

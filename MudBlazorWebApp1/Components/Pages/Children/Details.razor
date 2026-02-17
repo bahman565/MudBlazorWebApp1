@@ -3,6 +3,7 @@
 @using MudBlazorWebApp1.Services
 @inject ChildService ChildService
 @inject UserContext UserContext
+@inject ISnackbar Snackbar
 
 @if (_loading)
 {
@@ -29,13 +30,13 @@ else
             <MudDatePicker Label="تاریخ اندازه‌گیری" Date="@_measuredAt" DateChanged="OnMeasuredAtChanged" Required="true" />
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
-            <MudNumericField T="decimal" Label="وزن (کیلوگرم)" @bind-Value="_new.WeightKg" />
+            <MudNumericField T="decimal" Label="وزن (کیلوگرم)" @bind-Value="_new.WeightKg" Min="0" />
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
-            <MudNumericField T="decimal" Label="قد/طول (سانتی‌متر)" @bind-Value="_new.LengthCm" />
+            <MudNumericField T="decimal" Label="قد/طول (سانتی‌متر)" @bind-Value="_new.LengthCm" Min="0" />
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
-            <MudNumericField T="decimal" Label="دور سر (سانتی‌متر)" @bind-Value="_new.HeadCircumferenceCm" />
+            <MudNumericField T="decimal" Label="دور سر (سانتی‌متر)" @bind-Value="_new.HeadCircumferenceCm" Min="0" />
         </MudItem>
         <MudItem xs="12">
             <MudTextField Label="یادداشت" @bind-Value="_new.Note" Lines="2" />
@@ -55,7 +56,7 @@ else
     }
     else
     {
-        <MudTable Items="_child.Measurements" Dense="true" Hover="true" Striped="true" >
+        <MudTable Items="_child.Measurements" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.XlAndUp">
             <HeaderContent>
                 <MudTh>تاریخ</MudTh>
                 <MudTh>وزن</MudTh>
@@ -82,7 +83,7 @@ else
 }
 @if (_child is not null)
 {
-    <MudButton Variant="Variant.Filled" Style="margin-top:10px" Color="Color.Primary" 
+    <MudButton Variant="Variant.Filled" Style="margin-top:10px" Color="Color.Primary"
                Href="@($"/children/{_child.Id}/charts/weight-for-age")">
         نمودار وزن به سن
     </MudButton>
@@ -97,7 +98,7 @@ else
     private bool _loading = true;
     private Child? _child;
 
-    private Measurement _new = new() { WeightKg = 3, LengthCm = 50, HeadCircumferenceCm = 35 };
+    private Measurement _new = new() { WeightKg = 0, LengthCm = 0, HeadCircumferenceCm = 0 };
     private DateTime? _measuredAt = DateTime.Today;
 
     protected override async Task OnParametersSetAsync()
@@ -124,6 +125,23 @@ else
     {
         if (_child is null || _measuredAt is null) return;
 
+        // ======= validation: جلوگیری از ذخیره اگر فیلدها صفر باشند =======
+        // حالت 1: اگر می‌خواهید "هر کدام" از فیلدها صفر باشد خطا بدهد، از شرط زیر استفاده کنید:
+        if (_new.WeightKg < 0.5m || _new.LengthCm < 30m || _new.HeadCircumferenceCm < 20m)
+        {
+
+            Snackbar.Add("مقادیر وارد شده معقول نمی‌ باشد", Severity.Error);
+            return;
+        }
+
+        // حالت 2 (در صورت نیاز): اگر فقط وقتی "همه"ٔ فیلدها برابر 0 بودند خطا بدهد، از این شرط استفاده کنید:
+        // if (_new.WeightKg == 0m && _new.LengthCm == 0m && _new.HeadCircumferenceCm == 0m)
+        // {
+        //     Snackbar.Add("همهٔ فیلدهای اندازه‌گیری خالی/صفر هستند — حداقل یکی را وارد کنید.", Severity.Error);
+        //     return;
+        // }
+        // ================================================================
+
         _new.ChildId = _child.Id;
         _new.MeasuredAtUtc = DateTime.SpecifyKind(_measuredAt.Value, DateTimeKind.Local).ToUniversalTime();
 
@@ -141,4 +159,5 @@ else
         await ChildService.DeleteMeasurementAsync(measurementId, userId);
         await LoadAsync();
     }
+
 }

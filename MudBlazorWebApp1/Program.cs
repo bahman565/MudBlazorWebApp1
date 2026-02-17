@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor;
 using MudBlazor.Services;
 using MudBlazorWebApp1.Components;
 using MudBlazorWebApp1.Components.Account;
 using MudBlazorWebApp1.Data;
 using MudBlazorWebApp1.Services;
 using System.Globalization;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,18 @@ builder.Services.AddMudServices();
 builder.Services.AddScoped<ChildService>();
 builder.Services.AddScoped<UserContext>();
 builder.Services.AddScoped<GrowthReferenceQueryService>();
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;
+    config.SnackbarConfiguration.PreventDuplicates = false;
+    config.SnackbarConfiguration.NewestOnTop = true;
+    config.SnackbarConfiguration.ShowCloseIcon = true;
+    config.SnackbarConfiguration.VisibleStateDuration = 4000; // 5s
+    config.SnackbarConfiguration.ShowTransitionDuration = 250;
+    config.SnackbarConfiguration.HideTransitionDuration = 250;
+    config.SnackbarConfiguration.BackgroundBlurred = false;
+    config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
+});
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

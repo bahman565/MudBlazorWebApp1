@@ -20,7 +20,7 @@ else
 {
 
 
-    <MudPaper Class="pa-3 mb-4" Elevation="0" Outlined="true" Height="30px" Style="background-color:#8bb9d0 ">
+    <MudPaper Class="pa-3 mb-4" Elevation="0" Outlined="true" Height="30px" Style="background-color:#c6f9ff ">
         <MudGrid Spacing="2">
 
             <MudText Typo="Typo.subtitle1" Class="mb-2" Style="font-size:15px" Align="MudBlazor.Align.Center">
@@ -45,8 +45,8 @@ else
                              SeriesType="SeriesType.Line"
                              XValue="p => p.X"
                              YValue="p => p.Y"
-                             Stroke="@(new ApexCharts.SeriesStroke { Color = "#5c7a89", DashSpace = 0, Width = 3 })" />
-        
+                             Stroke="@(new ApexCharts.SeriesStroke { Color = "#5c7a89", DashSpace = 0, Width = 2 })" />
+                             
         }
                                
         {
@@ -59,6 +59,7 @@ else
                              Stroke="@(new ApexCharts.SeriesStroke { Color = "#e27d60", Width = 6 ,DashSpace = 0})" />
         }
     </ApexChart>
+
 }
 
 @code {
@@ -174,7 +175,7 @@ else
             // markers: کوچک برای اینکه نقاط مرجع بزرگ نشوند
             Markers = new Markers
             {
-                Size =2.5,
+                Size =0,
                 Colors = "#1f2b3g"
             }
         };
