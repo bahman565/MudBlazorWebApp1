@@ -22,6 +22,7 @@ builder.Services.AddMudServices();
 builder.Services.AddScoped<ChildService>();
 builder.Services.AddScoped<UserContext>();
 builder.Services.AddScoped<GrowthReferenceQueryService>();
+builder.Services.AddScoped<SelectedChildService>();
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopCenter;

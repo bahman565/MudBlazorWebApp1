@@ -4,6 +4,7 @@
 @inject ChildService ChildService
 @inject UserContext UserContext
 @inject ISnackbar Snackbar
+@inject MudBlazorWebApp1.Services.SelectedChildService SelectedChildService
 
 <style>
     body {
@@ -89,17 +90,7 @@ else
         </MudTable>
     }
 }
-@if (_child is not null)
-{
-    <MudButton Variant="Variant.Filled" Style="margin-top:10px" Color="Color.Primary"
-               Href="@($"/children/{_child.Id}/charts/weight-for-age")">
-        نمودار رشد
-    </MudButton>
-}
-else
-{
-    <MudProgressCircular Indeterminate="true" />
-}
+
 @code {
     [Parameter] public int Id { get; set; }
 
@@ -122,7 +113,10 @@ else
         _child = await ChildService.GetChildAsync(Id, userId);
 
         if (_child is not null)
+        {
             _new.ChildId = _child.Id;
+            SelectedChildService.SelectedChildId = _child.Id;  // ← خط جدید
+        }
 
         _loading = false;
     }
@@ -133,22 +127,11 @@ else
     {
         if (_child is null || _measuredAt is null) return;
 
-        // ======= validation: جلوگیری از ذخیره اگر فیلدها صفر باشند =======
-        // حالت 1: اگر می‌خواهید "هر کدام" از فیلدها صفر باشد خطا بدهد، از شرط زیر استفاده کنید:
         if (_new.WeightKg < 0.5m || _new.LengthCm < 40m || _new.HeadCircumferenceCm < 28m)
         {
-
-            Snackbar.Add("مقادیر وارد شده معقول نمی‌ باشد", Severity.Error);
+            Snackbar.Add("مقادیر وارد شده معقول نمی‌باشد", Severity.Error);
             return;
         }
-
-        // حالت 2 (در صورت نیاز): اگر فقط وقتی "همه"ٔ فیلدها برابر 0 بودند خطا بدهد، از این شرط استفاده کنید:
-        // if (_new.WeightKg == 0m && _new.LengthCm == 0m && _new.HeadCircumferenceCm == 0m)
-        // {
-        //     Snackbar.Add("همهٔ فیلدهای اندازه‌گیری خالی/صفر هستند — حداقل یکی را وارد کنید.", Severity.Error);
-        //     return;
-        // }
-        // ================================================================
 
         _new.ChildId = _child.Id;
         _new.MeasuredAtUtc = DateTime.SpecifyKind(_measuredAt.Value, DateTimeKind.Local).ToUniversalTime();
@@ -167,5 +150,4 @@ else
         await ChildService.DeleteMeasurementAsync(measurementId, userId);
         await LoadAsync();
     }
-
 }

@@ -6,6 +6,7 @@
 @inject UserContext UserContext
 @inject GrowthReferenceQueryService RefService
 @inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
 
 <style>
     body {
@@ -27,9 +28,20 @@ else if (_child is null)
 }
 else
 {
+    @if (_childPoints.Count == 0)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mb-4">
+            هنوز هیچ اندازه‌گیری برای این کودک ثبت نشده است.
+            <MudButton Size="MudBlazor.Size.Small" Color="MudBlazor.Color.Warning" Variant="Variant.Text"
+                       OnClick="@(() => NavigationManager.NavigateTo($"/children/{_child.Id}"))">
+                ثبت اندازه‌گیری
+            </MudButton>
+        </MudAlert>
+    }
+
     <br />
     <MudGrid>
-        <MudItem xs="12" >
+        <MudItem xs="12">
             <MudPaper Class="pa-2">
                 @* انتخاب کودک (Combo) *@
                 <MudSelect T="int"
@@ -51,7 +63,7 @@ else
             </MudPaper>
         </MudItem>
 
-        <MudItem xs="6" >
+        <MudItem xs="6">
             <MudPaper Class="pa-2">
                 <MudSelect T="ReferenceSource"
                            Label="مرجع مقایسه"
@@ -83,31 +95,34 @@ else
     <br />
     <br />
 
-    <ApexChart @key="_chartKey"
-               TItem="Point"
-               Title="@_chartTitle"
-               Options="_options"
-               Height="500">
+    @if (_childPoints.Count > 0)
+    {
+        <ApexChart @key="_chartKey"
+                   TItem="Point"
+                   Title="@_chartTitle"
+                   Options="_options"
+                   Height="500">
 
-        @foreach (var series in _percentileSeries)
-        {
+            @foreach (var series in _percentileSeries)
+            {
+                <ApexPointSeries TItem="Point"
+                                 Name="@series.Name"
+                                 Items="@series.Items"
+                                 SeriesType="SeriesType.Line"
+                                 XValue="p => p.X"
+                                 YValue="p => p.Y"
+                                 Stroke="@(new ApexCharts.SeriesStroke { Color = "#5c7a89", DashSpace = 0, Width = 2 })" />
+            }
+
             <ApexPointSeries TItem="Point"
-                             Name="@series.Name"
-                             Items="@series.Items"
+                             Name="@_child.Name"
+                             Items="_childPoints"
                              SeriesType="SeriesType.Line"
                              XValue="p => p.X"
                              YValue="p => p.Y"
-                             Stroke="@(new ApexCharts.SeriesStroke { Color = "#5c7a89", DashSpace = 0, Width = 2 })" />
-        }
-
-        <ApexPointSeries TItem="Point"
-                         Name="@_child.Name"
-                         Items="_childPoints"
-                         SeriesType="SeriesType.Line"
-                         XValue="p => p.X"
-                         YValue="p => p.Y"
-                         Stroke="@(new ApexCharts.SeriesStroke { Color = "#e27d60", Width = 4, DashSpace = 0 })" />
-    </ApexChart>
+                             Stroke="@(new ApexCharts.SeriesStroke { Color = "#e27d60", Width = 4, DashSpace = 0 })" />
+        </ApexChart>
+    }
 }
 
 @code {
@@ -142,7 +157,6 @@ else
         var userId = await UserContext.GetUserIdAsync();
 
         // لیست فرزندان کاربر را بگیرید
-        // توجه: اگر متد نام دیگری دارد (مثلاً GetChildrenAsync یا GetByUserAsync) آن را جایگزین کنید
         _children = (await ChildService.GetMyChildrenAsync(userId)).ToList();
 
         // چون route پارامتر Id دارد، سعی می‌کنیم براساس آن کودک انتخابی را ست کنیم
@@ -178,7 +192,6 @@ else
     }
 
     // وقتی کاربر در کمبو کودک را تغییر داد این متد صدا زده می‌شود
-    // جایگزین متد فعلی OnChildChanged با این نسخه:
     private Task OnChildChanged(int childId)
     {
         // فقط URL را تغییر بده — کامپوننت دوباره با پارامتر جدید بارگذاری خواهد شد
@@ -344,9 +357,9 @@ else
         return metric switch
         {
             GrowthMetric.WeightForAge => ("وزن به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "وزن (Kg)", 0, 20, 20),
-            GrowthMetric.LengthForAge => ("قد به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "قد (cm)", 40, 100, 12),
-            GrowthMetric.HeadForAge => ("دور سر به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "دور سر (cm)", 28, 54, 13),
-            GrowthMetric.WeightForLength => ("وزن به قد", "قد/طول (cm)", 40, 110, 14, "وزن (Kg)", 0, 20, 20),
+            GrowthMetric.LengthForAge => ("قد/طول به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "قد (cm)", 40, 110, 14),
+            GrowthMetric.HeadForAge => ("دور سر به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "دور سر (cm)", 28, 52, 12),
+            GrowthMetric.WeightForLength => ("وزن به طول", "قد/طول (cm)", 40, 110, 14, "وزن (Kg)", 0, 20, 20),
             _ => ("نمودار", "X", 0, 100, 10, "Y", 0, 100, 10)
         };
     }

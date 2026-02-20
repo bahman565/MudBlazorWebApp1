@@ -4,10 +4,11 @@
 @inject ChildService ChildService
 @inject UserContext UserContext
 @inject NavigationManager Nav
+@inject SelectedChildService SelectedChildService
 
 <style>
     body {
-        direction: ltr; /* اگر فارسی است */
+        direction: ltr;
         background-color: #ffffff;
         font-family: Vazirmatn
     }
@@ -33,7 +34,7 @@ else if (_items.Count == 0)
 }
 else
 {
-    <MudTable Items="_items" Hover="true" Dense="true" Style="background-color:#deebe9"  >
+    <MudTable Items="_items" Hover="true" Dense="true" Style="background-color:#deebe9">
         <HeaderContent>
             <MudTh>نام</MudTh>
             <MudTh>جنسیت</MudTh>
@@ -46,7 +47,7 @@ else
             <MudTd DataLabel="تولد">@context.BirthDate</MudTd>
             <MudTd>
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="MudBlazor.Color.Secondary"
-                           OnClick="@(() => Nav.NavigateTo($"/children/{context.Id}"))">
+                           OnClick="@(() => SelectChildAndNavigate(context.Id))">
                     اندازه گیری
                 </MudButton>
                 <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="MudBlazor.Color.Info" Class="ml-2"
@@ -56,7 +57,6 @@ else
             </MudTd>
         </RowTemplate>
     </MudTable>
-    
 }
 
 @code {
@@ -68,6 +68,12 @@ else
         var userId = await UserContext.GetUserIdAsync();
         _items = await ChildService.GetMyChildrenAsync(userId);
         _loading = false;
+    }
+
+    private void SelectChildAndNavigate(int childId)
+    {
+        SelectedChildService.SelectedChildId = childId;  // ← ذخیره شدن شناسهٔ کودک
+        Nav.NavigateTo($"/children/{childId}");
     }
 
     private static string GenderFa(ChildGender g) => g == ChildGender.Male ? "پسر" : "دختر";
