@@ -5,6 +5,15 @@
 @inject UserContext UserContext
 @inject NavigationManager Nav
 
+<style>
+    body {
+        direction: ltr; /* اگر فارسی است */
+        background-color: #ffffff;
+        font-family: Vazirmatn
+    }
+</style>
+
+<PageTitle>Children</PageTitle>
 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
     <MudText Typo="Typo.h5">کودکان</MudText>
     <div style="margin-top:10px">
@@ -24,7 +33,7 @@ else if (_items.Count == 0)
 }
 else
 {
-    <MudTable Items="_items" Hover="true" Dense="true">
+    <MudTable Items="_items" Hover="true" Dense="true" Style="background-color:#deebe9"  >
         <HeaderContent>
             <MudTh>نام</MudTh>
             <MudTh>جنسیت</MudTh>
@@ -38,7 +47,7 @@ else
             <MudTd>
                 <MudButton Size="Size.Small" Variant="Variant.Filled" Color="MudBlazor.Color.Secondary"
                            OnClick="@(() => Nav.NavigateTo($"/children/{context.Id}"))">
-                    مشاهده
+                    اندازه گیری
                 </MudButton>
                 <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="MudBlazor.Color.Info" Class="ml-2"
                            OnClick="@(() => Nav.NavigateTo($"/children/edit/{context.Id}"))">
@@ -47,6 +56,7 @@ else
             </MudTd>
         </RowTemplate>
     </MudTable>
+    
 }
 
 @code {

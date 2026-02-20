@@ -5,8 +5,17 @@
 @inject ChildService ChildService
 @inject UserContext UserContext
 @inject GrowthReferenceQueryService RefService
+@inject NavigationManager NavigationManager
 
-<MudText Typo="Typo.h5" Class="mb-2">نمودار وزن به سن</MudText>
+<style>
+    body {
+        direction: ltr;
+        background-color: #ffffff;
+        font-family: Vazirmatn;
+    }
+</style>
+
+<MudText Typo="Typo.h5" Class="mb-2">@_chartTitle</MudText>
 
 @if (_loading)
 {
@@ -18,25 +27,68 @@ else if (_child is null)
 }
 else
 {
+    <br />
+    <MudGrid>
+        <MudItem xs="12" >
+            <MudPaper Class="pa-2">
+                @* انتخاب کودک (Combo) *@
+                <MudSelect T="int"
+                           Label="انتخاب کودک"
+                           Value="_selectedChildId"
+                           ValueChanged="OnChildChanged"
+                           Dense="true"
+                           Variant="Variant.Outlined">
+                    @if (_children != null)
+                    {
+                        @foreach (var c in _children)
+                        {
+                            <MudSelectItem T="int" Value="@(c.Id)">
+                                @c.Name
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            </MudPaper>
+        </MudItem>
 
+        <MudItem xs="6" >
+            <MudPaper Class="pa-2">
+                <MudSelect T="ReferenceSource"
+                           Label="مرجع مقایسه"
+                           Value="_selectedSource"
+                           ValueChanged="OnSourceChanged"
+                           Dense="true" Placeholder="true" Variant="Variant.Text">
+                    <MudSelectItem T="ReferenceSource" Value="ReferenceSource.Mashhad">Mashhad</MudSelectItem>
+                    <MudSelectItem T="ReferenceSource" Value="ReferenceSource.Who">WHO</MudSelectItem>
+                </MudSelect>
+            </MudPaper>
+        </MudItem>
 
-    <MudPaper Class="pa-3 mb-4" Elevation="0" Outlined="true" Height="30px" Style="background-color:#c6f9ff ">
-        <MudGrid Spacing="2">
+        <MudItem xs="6">
+            <MudPaper Class="pa-2">
+                <MudSelect T="GrowthMetric"
+                           Label="نوع نمودار"
+                           Value="_selectedMetric"
+                           ValueChanged="OnMetricChanged"
+                           Dense="true" Placeholder="true" Variant="Variant.Text">
+                    <MudSelectItem T="GrowthMetric" Value="GrowthMetric.WeightForAge">وزن به سن</MudSelectItem>
+                    <MudSelectItem T="GrowthMetric" Value="GrowthMetric.LengthForAge">قد به سن</MudSelectItem>
+                    <MudSelectItem T="GrowthMetric" Value="GrowthMetric.HeadForAge">دور سر به سن</MudSelectItem>
+                    <MudSelectItem T="GrowthMetric" Value="GrowthMetric.WeightForLength">وزن به قد</MudSelectItem>
+                </MudSelect>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
 
-            <MudText Typo="Typo.subtitle1" Class="mb-2" Style="font-size:15px" Align="MudBlazor.Align.Center">
-                @_child.Name — @(_child.Gender == ChildGender.Male ? "پسر" : "دختر")
-            </MudText>
-            
-        </MudGrid>
-    </MudPaper>
+    <br />
+    <br />
 
     <ApexChart @key="_chartKey"
                TItem="Point"
-               Title="Weight-for-Age (Mashhad)"
+               Title="@_chartTitle"
                Options="_options"
                Height="500">
 
-        @* Percentiles (always line) *@
         @foreach (var series in _percentileSeries)
         {
             <ApexPointSeries TItem="Point"
@@ -46,35 +98,35 @@ else
                              XValue="p => p.X"
                              YValue="p => p.Y"
                              Stroke="@(new ApexCharts.SeriesStroke { Color = "#5c7a89", DashSpace = 0, Width = 2 })" />
-                             
         }
-                               
-        {
-            <ApexPointSeries TItem="Point"
-                             Name=@_child.Name
-                             Items="_childPoints"
-                             SeriesType="SeriesType.Line"
-                             XValue="p => p.X"
-                             YValue="p => p.Y"
-                             Stroke="@(new ApexCharts.SeriesStroke { Color = "#e27d60", Width = 6 ,DashSpace = 0})" />
-        }
-    </ApexChart>
 
+        <ApexPointSeries TItem="Point"
+                         Name="@_child.Name"
+                         Items="_childPoints"
+                         SeriesType="SeriesType.Line"
+                         XValue="p => p.X"
+                         YValue="p => p.Y"
+                         Stroke="@(new ApexCharts.SeriesStroke { Color = "#e27d60", Width = 4, DashSpace = 0 })" />
+    </ApexChart>
 }
 
 @code {
     [Parameter] public int Id { get; set; }
 
-    private const decimal MaxAgeMonths = 24m;
+    // برای متریک‌هایی که محور X سن است از این مقدار استفاده می‌کنیم
+    private const decimal DefaultMaxAgeMonths = 24m;
 
     private bool _loading = true;
     private Child? _child;
 
-    private readonly int[] _availablePercentiles = new[] { 1, 3, 5, 15, 25, 50, 75, 85, 95, 97, 99 };
+    private List<Child> _children = new();
+    private int _selectedChildId;
 
+    private readonly int[] _availablePercentiles = new[] { 1, 3, 5, 15, 25, 50, 75, 85, 95, 97, 99 };
     private IReadOnlyCollection<int> _selectedPercentiles = new List<int> { 3, 15, 50, 85, 97 };
 
-   
+    private ReferenceSource _selectedSource = ReferenceSource.Mashhad;
+    private GrowthMetric _selectedMetric = GrowthMetric.WeightForAge;
 
     private List<GrowthReferencePoint> _refs = new();
     private List<Point> _childPoints = new();
@@ -82,13 +134,38 @@ else
 
     private int _chartKey = 1;
     private ApexChartOptions<Point> _options = new();
+    private string _chartTitle = "وزن به سن";
 
     protected override async Task OnParametersSetAsync()
     {
         _loading = true;
-
         var userId = await UserContext.GetUserIdAsync();
-        _child = await ChildService.GetChildAsync(Id, userId);
+
+        // لیست فرزندان کاربر را بگیرید
+        // توجه: اگر متد نام دیگری دارد (مثلاً GetChildrenAsync یا GetByUserAsync) آن را جایگزین کنید
+        _children = (await ChildService.GetMyChildrenAsync(userId)).ToList();
+
+        // چون route پارامتر Id دارد، سعی می‌کنیم براساس آن کودک انتخابی را ست کنیم
+        if (_children.Count == 0)
+        {
+            _child = null;
+            _loading = false;
+            return;
+        }
+
+        // اگر Id از URL معتبر است و در لیست هست، آن را انتخاب کن، وگرنه اولین عنصر را انتخاب کن
+        if (_children.Any(c => c.Id == Id))
+            _selectedChildId = Id;
+        else
+        {
+            _selectedChildId = _children.First().Id;
+            Id = _selectedChildId;
+            // آپدیت آدرس URL تا با انتخاب هماهنگ باشد
+            NavigationManager.NavigateTo($"/children/{Id}/charts/weight-for-age", forceLoad: false);
+        }
+
+        // فراخوانی ChildService برای گرفتن جزئیات کودک انتخاب‌شده
+        _child = await ChildService.GetChildAsync(_selectedChildId, userId);
 
         if (_child is null)
         {
@@ -96,28 +173,60 @@ else
             return;
         }
 
-        _refs = await RefService.GetAsync(
-            ReferenceSource.Mashhad,
-            GrowthMetric.WeightForAge,
-            _child.Gender);
+        await LoadRefsAndBuildAsync();
+        _loading = false;
+    }
 
-        _refs = _refs.Where(r => r.X >= 0 && r.X <= MaxAgeMonths).ToList();
+    // وقتی کاربر در کمبو کودک را تغییر داد این متد صدا زده می‌شود
+    // جایگزین متد فعلی OnChildChanged با این نسخه:
+    private Task OnChildChanged(int childId)
+    {
+        // فقط URL را تغییر بده — کامپوننت دوباره با پارامتر جدید بارگذاری خواهد شد
+        NavigationManager.NavigateTo($"/children/{childId}/charts/weight-for-age");
+        return Task.CompletedTask;
+    }
 
+    private async Task LoadRefsAndBuildAsync()
+    {
+        // دریافت مرجع بر اساس متریک و منبع انتخابی
+        _refs = await RefService.GetAsync(_selectedSource, _selectedMetric, _child!.Gender);
+
+        // محدود کردن بازه بر اساس متریک (مثلاً برای وزن به طول، X محدوده طول است)
+        var settings = GetMetricSettings(_selectedMetric);
+
+        _refs = _refs.Where(r => r.X >= (decimal)settings.XMin && r.X <= (decimal)settings.XMax).ToList();
+
+        // ساخت نقاط کودک (X و Y متریک‌محور)
         _childPoints = _child.Measurements
-            .Where(m => m.WeightKg > 0)
-            .OrderBy(m => m.MeasuredAtUtc)
-            .Select(m =>
+            .Select(m => new
             {
-                var local = m.MeasuredAtUtc.ToLocalTime();
-                var ageMonths = AgeMath.AgeInMonths(_child.BirthDate, local);
-                return new Point(ageMonths, m.WeightKg);
+                M = m,
+                X = GetMeasurementX(m, _selectedMetric),
+                Y = GetMeasurementY(m, _selectedMetric)
             })
-            .Where(p => p.X >= 0 && p.X <= MaxAgeMonths)
+            .Where(x => x.X.HasValue && x.Y.HasValue)
+            .Select(x => new Point(x.X!.Value, x.Y!.Value))
+            .Where(p => p.X >= (decimal)settings.XMin && p.X <= (decimal)settings.XMax
+                     && p.Y >= (decimal)settings.YMin && p.Y <= (decimal)settings.YMax)
+            .OrderBy(p => p.X)
             .ToList();
 
         RebuildPercentileSeries();
         RebuildOptionsAndRefresh();
-        _loading = false;
+    }
+
+    private async Task OnSourceChanged(ReferenceSource source)
+    {
+        _selectedSource = source;
+        if (_child is null) return;
+        await LoadRefsAndBuildAsync();
+    }
+
+    private async Task OnMetricChanged(GrowthMetric metric)
+    {
+        _selectedMetric = metric;
+        if (_child is null) return;
+        await LoadRefsAndBuildAsync();
     }
 
     private void OnSelectedPercentilesChanged(IReadOnlyCollection<int> values)
@@ -131,15 +240,13 @@ else
         RebuildOptionsAndRefresh();
     }
 
-    
-
     private void RebuildOptionsAndRefresh()
     {
-        // IMPORTANT: in Blazor-ApexCharts options should not be shared/mutated across instances.
-        // Create a NEW options instance each time to ensure changes apply.
+        var settings = GetMetricSettings(_selectedMetric);
+        _chartTitle = settings.DisplayName;
+
         _options = new ApexChartOptions<Point>
         {
-            
             Chart = new Chart
             {
                 Toolbar = new Toolbar { Show = true },
@@ -147,19 +254,19 @@ else
             },
             Xaxis = new XAxis
             {
-                Title = new AxisTitle { Text = "سن (ماه)" },
-                Min = 0,
-                Max = (double)MaxAgeMonths,
-                TickAmount = 24
+                Title = new AxisTitle { Text = settings.XAxisTitle },
+                Min = settings.XMin,
+                Max = settings.XMax,
+                TickAmount = settings.XTickAmount
             },
             Yaxis = new List<YAxis>
             {
                 new YAxis
                 {
-                    Title = new AxisTitle { Text = "وزن (Kg)" },
-                    Min = 0,
-                    Max = 20,
-                    TickAmount = 20
+                    Title = new AxisTitle { Text = settings.YAxisTitle },
+                    Min = settings.YMin,
+                    Max = settings.YMax,
+                    TickAmount = settings.YTickAmount
                 }
             },
             Legend = new Legend
@@ -167,20 +274,10 @@ else
                 Show = true,
                 Position = LegendPosition.Top
             },
-            Stroke = new Stroke
-            {
-                Curve = Curve.Straight,
-                
-            },
-            // markers: کوچک برای اینکه نقاط مرجع بزرگ نشوند
-            Markers = new Markers
-            {
-                Size =0,
-                Colors = "#1f2b3g"
-            }
+            Stroke = new Stroke { Curve = Curve.Straight },
+            Markers = new Markers { Size = 0.5 }
         };
 
-        // force full re-render
         _chartKey++;
         StateHasChanged();
     }
@@ -219,6 +316,40 @@ else
         99 => r.P99,
         _ => null
     };
+
+    // X را بسته به متریک می‌سازد
+    private decimal? GetMeasurementX(Measurement m, GrowthMetric metric) => metric switch
+    {
+        GrowthMetric.WeightForAge => AgeMath.AgeInMonths(_child!.BirthDate, m.MeasuredAtUtc.ToLocalTime()),
+        GrowthMetric.LengthForAge => AgeMath.AgeInMonths(_child!.BirthDate, m.MeasuredAtUtc.ToLocalTime()),
+        GrowthMetric.HeadForAge => AgeMath.AgeInMonths(_child!.BirthDate, m.MeasuredAtUtc.ToLocalTime()),
+        GrowthMetric.WeightForLength => (m.LengthCm > 0 ? m.LengthCm : (decimal?)null),
+        _ => null
+    };
+
+    // Y را بسته به متریک می‌سازد
+    private decimal? GetMeasurementY(Measurement m, GrowthMetric metric) => metric switch
+    {
+        GrowthMetric.WeightForAge => (m.WeightKg > 0 ? m.WeightKg : (decimal?)null),
+        GrowthMetric.LengthForAge => (m.LengthCm > 0 ? m.LengthCm : (decimal?)null),
+        GrowthMetric.HeadForAge => (m.HeadCircumferenceCm > 0 ? m.HeadCircumferenceCm : (decimal?)null),
+        GrowthMetric.WeightForLength => (m.WeightKg > 0 ? m.WeightKg : (decimal?)null),
+        _ => null
+    };
+
+    // تنظیمات محور X/Y و عنوان بر اساس متریک
+    private (string DisplayName, string XAxisTitle, double XMin, double XMax, int XTickAmount,
+             string YAxisTitle, double YMin, double YMax, int YTickAmount) GetMetricSettings(GrowthMetric metric)
+    {
+        return metric switch
+        {
+            GrowthMetric.WeightForAge => ("وزن به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "وزن (Kg)", 0, 20, 20),
+            GrowthMetric.LengthForAge => ("قد به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "قد (cm)", 40, 100, 12),
+            GrowthMetric.HeadForAge => ("دور سر به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "دور سر (cm)", 28, 54, 13),
+            GrowthMetric.WeightForLength => ("وزن به قد", "قد/طول (cm)", 40, 110, 14, "وزن (Kg)", 0, 20, 20),
+            _ => ("نمودار", "X", 0, 100, 10, "Y", 0, 100, 10)
+        };
+    }
 
     public record Point(decimal X, decimal Y);
     private record Series(string Name, List<Point> Items);

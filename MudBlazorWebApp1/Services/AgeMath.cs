@@ -8,7 +8,11 @@ public static class AgeMath
         var days = measuredDate.DayNumber - birthDate.DayNumber;
         if (days < 0) days = 0;
 
-        // تبدیل تقریبی به ماه (برای نمودار کافی است)
-        return (decimal)days / 30.4375m;
+        // ماه‌های کامل + روزهای ناقص
+        var months = days / 30;
+        var remainingDays = days % 30;
+        var monthsWithFraction = months + (decimal)remainingDays / 30m;
+
+        return Math.Round(monthsWithFraction, 2);
     }
 }

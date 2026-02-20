@@ -5,6 +5,14 @@
 @inject UserContext UserContext
 @inject ISnackbar Snackbar
 
+<style>
+    body {
+        direction: ltr; /* اگر فارسی است */
+        background-color: #ffffff;
+        font-family: Vazirmatn
+    }
+</style>
+
 @if (_loading)
 {
     <MudProgressCircular Indeterminate="true" />
@@ -85,7 +93,7 @@ else
 {
     <MudButton Variant="Variant.Filled" Style="margin-top:10px" Color="Color.Primary"
                Href="@($"/children/{_child.Id}/charts/weight-for-age")">
-        نمودار وزن به سن
+        نمودار رشد
     </MudButton>
 }
 else
@@ -127,7 +135,7 @@ else
 
         // ======= validation: جلوگیری از ذخیره اگر فیلدها صفر باشند =======
         // حالت 1: اگر می‌خواهید "هر کدام" از فیلدها صفر باشد خطا بدهد، از شرط زیر استفاده کنید:
-        if (_new.WeightKg < 0.5m || _new.LengthCm < 30m || _new.HeadCircumferenceCm < 20m)
+        if (_new.WeightKg < 0.5m || _new.LengthCm < 40m || _new.HeadCircumferenceCm < 28m)
         {
 
             Snackbar.Add("مقادیر وارد شده معقول نمی‌ باشد", Severity.Error);

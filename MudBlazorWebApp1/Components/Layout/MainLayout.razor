@@ -4,9 +4,10 @@
 
 <style>
     body {
-        font-family: "Vazirmatn", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        
         direction: ltr; /* اگر فارسی است */
         background-color: #ffffff;
+        font-family: Vazirmatn
     }
 </style>
 <MudThemeProvider />
@@ -14,18 +15,18 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudLayout>
-    <MudAppBar Elevation="1">
+    <MudAppBar Elevation="1" style="background-color:#40c2d0">
         <MudStaticNavDrawerToggle DrawerId="nav-drawer" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" />
-        <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
+        <MudText Typo="Typo.h5" Class="ml-3">Baby Growth</MudText>
         <MudSpacer />
         
-        <div style="width:100px">
+        <div style="width:150px">
             <AuthorizeView>
                 <form action="Account/Logout" method="post">
                     <AntiforgeryToken />
                     <input type="hidden" name="ReturnUrl" value="/" />
                     <button type="submit" class="mud-nav-link mud-ripple">
-                        <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Class="mr-3"></MudIcon> Logout
+                        <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Class="mr-3"></MudIcon> خروج از برنامه
                     </button>
                 </form>
 
@@ -55,14 +56,14 @@
                                      ForceLoad
                                      Icon="@Icons.Material.TwoTone.Login"
                                      IconColor="Color.Primary"
-                                     Label="Sign In"
+                                     Label="ورود"
                                      Disabled="true" />
 
                         <MudMenuItem Href="Account/Register"
                                      ForceLoad
                                      Icon="@Icons.Material.TwoTone.Person"
                                      IconColor="Color.Primary"
-                                     Label="Register"
+                                     Label="ثبت نام"
                                      Disabled="true" />
                     </Authorized>
 
@@ -72,14 +73,14 @@
                                      ForceLoad
                                      Icon="@Icons.Material.TwoTone.Login"
                                      IconColor="Color.Primary"
-                                     Label="Sign In"
+                                     Label="ورود"
                                      Disabled="false" />
 
                         <MudMenuItem Href="Account/Register"
                                      ForceLoad
                                      Icon="@Icons.Material.TwoTone.Person"
                                      IconColor="Color.Primary"
-                                     Label="Register"
+                                     Label="ثبت نام"
                                      Disabled="false" />
                     </NotAuthorized>
                 </AuthorizeView>
