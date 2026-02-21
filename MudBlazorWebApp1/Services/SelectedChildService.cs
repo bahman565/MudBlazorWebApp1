@@ -27,11 +27,12 @@ namespace MudBlazorWebApp1.Services
 
                 if (value.HasValue)
                 {
-                    SaveToLocalStorage(value.Value);
+                    // Setter نمی‌تواند async باشد؛ fire-and-forget با _ = ...
+                    _ = SaveToLocalStorageAsync(value.Value);
                 }
                 else
                 {
-                    ClearFromLocalStorage();
+                    _ = ClearFromLocalStorageAsync();
                 }
 
                 OnChange?.Invoke();
@@ -63,7 +64,7 @@ namespace MudBlazorWebApp1.Services
             }
         }
 
-        private async void SaveToLocalStorage(int childId)
+        private async Task SaveToLocalStorageAsync(int childId)
         {
             try
             {
@@ -73,27 +74,10 @@ namespace MudBlazorWebApp1.Services
                 var key = $"{LocalStorageKeyPrefix}{_currentUserId}";
                 await _jsRuntime.InvokeVoidAsync("localStorage.setItem", key, childId.ToString());
             }
-            catch { }
-        }
-
-        private async void ClearFromLocalStorage()
-        {
-            try
+            catch
             {
-                if (string.IsNullOrEmpty(_currentUserId))
-                    _currentUserId = await _userContext.GetUserIdAsync();
-
-                var key = $"{LocalStorageKeyPrefix}{_currentUserId}";
-                await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", key);
+                // در صورت نیاز لاگ کن یا مدیریت کن
             }
-            catch { }
-        }
-
-        // متد جدید برای پاک کردن هنگام لاگ‌اوت
-        public async Task ClearOnLogoutAsync()
-        {
-            _selectedChildId = null;
-            await ClearFromLocalStorageAsync();
         }
 
         private async Task ClearFromLocalStorageAsync()
@@ -106,7 +90,17 @@ namespace MudBlazorWebApp1.Services
                 var key = $"{LocalStorageKeyPrefix}{_currentUserId}";
                 await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", key);
             }
-            catch { }
+            catch
+            {
+                // در صورت نیاز لاگ کن یا مدیریت کن
+            }
+        }
+
+        // متد جدید برای پاک کردن هنگام لاگ‌اوت
+        public async Task ClearOnLogoutAsync()
+        {
+            _selectedChildId = null;
+            await ClearFromLocalStorageAsync();
         }
     }
 }

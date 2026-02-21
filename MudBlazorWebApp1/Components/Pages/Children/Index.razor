@@ -12,13 +12,17 @@
         background-color: #ffffff;
         font-family: Vazirmatn
     }
-</style>
+
+    .my-class .mud-table-cell {
+        font-size: 1rem;
+    }
+   </style>
 
 <PageTitle>Children</PageTitle>
 <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
-    <MudText Typo="Typo.h5">کودکان</MudText>
+    <MudText Typo="Typo.h5" Style="font-family:Vazirmatn">کودکان</MudText>
     <div style="margin-top:10px">
-        <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Tertiary" OnClick="@(() => Nav.NavigateTo("/children/new"))">
+        <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Tertiary" OnClick="@(() => Nav.NavigateTo("/children/new"))" Style="font-family:Vazirmatn">
             افزودن کودک
         </MudButton>
     </div>
@@ -34,7 +38,7 @@ else if (_items.Count == 0)
 }
 else
 {
-    <MudTable Items="_items" Hover="true" Dense="true" Style="background-color:#deebe9">
+    <MudTable Items="_items" Hover="true" Dense="true" Style="background-color:#EFEBE9" >
         <HeaderContent>
             <MudTh>نام</MudTh>
             <MudTh>جنسیت</MudTh>
@@ -46,12 +50,12 @@ else
             <MudTd DataLabel="جنسیت">@GenderFa(context.Gender)</MudTd>
             <MudTd DataLabel="تولد">@context.BirthDate</MudTd>
             <MudTd>
-                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="MudBlazor.Color.Secondary"
-                           OnClick="@(() => SelectChildAndNavigate(context.Id))">
+                <MudButton Size="Size.Medium" Variant="Variant.Filled" Color="MudBlazor.Color.Secondary"
+                           OnClick="@(() => SelectChildAndNavigate(context.Id))" Style="font-family:Vazirmatn">
                     اندازه گیری
                 </MudButton>
-                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="MudBlazor.Color.Info" Class="ml-2"
-                           OnClick="@(() => Nav.NavigateTo($"/children/edit/{context.Id}"))">
+                <MudButton Size="Size.Medium" Variant="Variant.Filled" Color="MudBlazor.Color.Info" Class="ml-2"
+                           OnClick="@(() => Nav.NavigateTo($"/children/edit/{context.Id}"))" Style="font-family:Vazirmatn">
                     ویرایش
                 </MudButton>
             </MudTd>

@@ -14,9 +14,14 @@
         background-color: #ffffff;
         font-family: Vazirmatn;
     }
+
+    .my-class .mud-table-cell {
+        font-size: 1rem;
+    }
 </style>
 
 <MudText Typo="Typo.h5" Class="mb-2">@_chartTitle</MudText>
+
 
 @if (_loading)
 {
@@ -31,16 +36,17 @@ else
     @if (_childPoints.Count == 0)
     {
         <MudAlert Severity="Severity.Warning" Class="mb-4">
-            هنوز هیچ اندازه‌گیری برای این کودک ثبت نشده است.
-            <MudButton Size="MudBlazor.Size.Small" Color="MudBlazor.Color.Warning" Variant="Variant.Text"
+            <MudText Typo="Typo.subtitle1" Style="font-family:Vazirmatn">هنوز هیچ اندازه‌گیری برای این کودک ثبت نشده است.</MudText>
+            
+            <MudButton Size="MudBlazor.Size.Medium" Color="MudBlazor.Color.Warning" Variant="Variant.Outlined"
                        OnClick="@(() => NavigationManager.NavigateTo($"/children/{_child.Id}"))">
-                ثبت اندازه‌گیری
+                <MudText Typo="Typo.button">ثبت اندازه‌گیری </MudText>
             </MudButton>
         </MudAlert>
     }
 
     <br />
-    <MudGrid>
+    <MudGrid >
         <MudItem xs="12">
             <MudPaper Class="pa-2">
                 @* انتخاب کودک (Combo) *@
@@ -49,12 +55,12 @@ else
                            Value="_selectedChildId"
                            ValueChanged="OnChildChanged"
                            Dense="true"
-                           Variant="Variant.Outlined">
+                           Variant="Variant.Outlined" >
                     @if (_children != null)
                     {
                         @foreach (var c in _children)
                         {
-                            <MudSelectItem T="int" Value="@(c.Id)">
+                            <MudSelectItem T="int" Value="@(c.Id)" >
                                 @c.Name
                             </MudSelectItem>
                         }
@@ -71,7 +77,7 @@ else
                            ValueChanged="OnSourceChanged"
                            Dense="true" Placeholder="true" Variant="Variant.Text">
                     <MudSelectItem T="ReferenceSource" Value="ReferenceSource.Mashhad">Mashhad</MudSelectItem>
-                    <MudSelectItem T="ReferenceSource" Value="ReferenceSource.Who">WHO</MudSelectItem>
+                    <MudSelectItem T="ReferenceSource" Value="ReferenceSource.Who">WHO(نمودار جهانی)</MudSelectItem>
                 </MudSelect>
             </MudPaper>
         </MudItem>
@@ -94,7 +100,7 @@ else
 
     <br />
     <br />
-
+    <MudPaper Elevation="3">
     @if (_childPoints.Count > 0)
     {
         <ApexChart @key="_chartKey"
@@ -123,6 +129,7 @@ else
                              Stroke="@(new ApexCharts.SeriesStroke { Color = "#e27d60", Width = 4, DashSpace = 0 })" />
         </ApexChart>
     }
+    </MudPaper>
 }
 
 @code {
@@ -252,6 +259,20 @@ else
         RebuildPercentileSeries();
         RebuildOptionsAndRefresh();
     }
+    // این متد برای تعیین اندازه مارکرها استفاده می‌شود: برای سری‌های صدک اندازه 0 (نامرئی) و برای سری کودک اندازه 6
+    private List<double> BuildMarkerSizes()
+    {
+        var sizes = new List<double>();
+
+        // صدک‌ها
+        for (int i = 0; i < _percentileSeries.Count; i++)
+            sizes.Add(0);
+
+        // سری کودک
+        sizes.Add(4);
+
+        return sizes;
+    }
 
     private void RebuildOptionsAndRefresh()
     {
@@ -288,7 +309,12 @@ else
                 Position = LegendPosition.Top
             },
             Stroke = new Stroke { Curve = Curve.Straight },
-            Markers = new Markers { Size = 0.5 }
+
+            //Markers = new Markers { Size = 0.5 }
+            Markers = new Markers
+            {
+                Size = BuildMarkerSizes()
+            },
         };
 
         _chartKey++;
@@ -357,9 +383,9 @@ else
         return metric switch
         {
             GrowthMetric.WeightForAge => ("وزن به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "وزن (Kg)", 0, 20, 20),
-            GrowthMetric.LengthForAge => ("قد/طول به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "قد (cm)", 40, 110, 14),
+            GrowthMetric.LengthForAge => ("قد به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "قد (cm)", 40, 110, 14),
             GrowthMetric.HeadForAge => ("دور سر به سن", "سن (ماه)", 0, (double)DefaultMaxAgeMonths, 24, "دور سر (cm)", 28, 52, 12),
-            GrowthMetric.WeightForLength => ("وزن به طول", "قد/طول (cm)", 40, 110, 14, "وزن (Kg)", 0, 20, 20),
+            GrowthMetric.WeightForLength => ("وزن به قد", "قد/طول (cm)", 40, 110, 14, "وزن (Kg)", 0, 20, 20),
             _ => ("نمودار", "X", 0, 100, 10, "Y", 0, 100, 10)
         };
     }

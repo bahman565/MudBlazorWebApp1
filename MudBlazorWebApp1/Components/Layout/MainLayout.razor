@@ -1,6 +1,8 @@
 ﻿@inherits LayoutComponentBase
-@inject NavigationManager NavigationManager
 @inject IDialogService DialogService
+@implements IDisposable
+@inject NavigationManager NavigationManager
+
 
 <style>
     body {
@@ -93,6 +95,7 @@
         <NavMenu />
     </MudDrawer>
     <MudMainContent Class="pt-16 pa-4">
+
         @Body
         
     </MudMainContent>

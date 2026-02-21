@@ -5,12 +5,17 @@
 @inject UserContext UserContext
 @inject ISnackbar Snackbar
 @inject MudBlazorWebApp1.Services.SelectedChildService SelectedChildService
+@inject IDialogService DialogService
 
 <style>
     body {
         direction: ltr; /* اگر فارسی است */
         background-color: #ffffff;
         font-family: Vazirmatn
+    }
+
+    .my-class .TableClassl {
+        font-size: 4rem;
     }
 </style>
 
@@ -24,15 +29,15 @@ else if (_child is null)
 }
 else
 {
-    <MudText Typo="Typo.h5">@_child.Name</MudText>
-    <MudText Typo="Typo.body2">
+    <MudText Typo="Typo.h5" Style="font-family:Vazirmatn">@_child.Name</MudText>
+    <MudText Typo="Typo.body2" Style="font-family:Vazirmatn">
         جنسیت: @( _child.Gender == ChildGender.Male ? "پسر" : "دختر" ) |
         تولد: @_child.BirthDate
     </MudText>
 
     <MudDivider Class="my-4" />
 
-    <MudText Typo="Typo.h6" Class="mb-2">ثبت اندازه‌گیری جدید</MudText>
+    <MudText Typo="Typo.h6" Class="mb-2" Style="font-family:Vazirmatn">ثبت اندازه‌گیری جدید</MudText>
 
     <MudGrid>
         <MudItem xs="12" sm="6" md="3">
@@ -51,13 +56,13 @@ else
             <MudTextField Label="یادداشت" @bind-Value="_new.Note" Lines="2" />
         </MudItem>
         <MudItem xs="12">
-            <MudButton Color="MudBlazor.Color.Tertiary" Variant="Variant.Filled" OnClick="AddMeasurementAsync">ثبت</MudButton>
+            <MudButton Color="MudBlazor.Color.Tertiary" Variant="Variant.Filled" OnClick="AddMeasurementAsync" Style="font-family:Vazirmatn">ثبت</MudButton>
         </MudItem>
     </MudGrid>
 
     <MudDivider Class="my-4" />
 
-    <MudText Typo="Typo.h6" Class="mb-2">لیست اندازه‌گیری‌ها</MudText>
+    <MudText Typo="Typo.h6" Class="mb-2" Style="font-family:Vazirmatn">لیست اندازه‌گیری‌ها</MudText>
 
     @if (_child.Measurements.Count == 0)
     {
@@ -67,10 +72,10 @@ else
     {
         <MudTable Items="_child.Measurements" Dense="true" Hover="true" Striped="true" Breakpoint="Breakpoint.XlAndUp">
             <HeaderContent>
-                <MudTh>تاریخ</MudTh>
-                <MudTh>وزن</MudTh>
-                <MudTh>قد/طول</MudTh>
-                <MudTh>دور سر</MudTh>
+                <MudTh><MudText Typo="Typo.body2" Style="font-family:Vazirmatn">تاریخ</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.body2" Style="font-family:Vazirmatn">وزن</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.body2" Style="font-family:Vazirmatn">قد</MudText></MudTh>
+                <MudTh><MudText Typo="Typo.body2" Style="font-family:Vazirmatn">دور سر</MudText></MudTh>
                 <MudTh>BMI</MudTh>
                 <MudTh></MudTh>
             </HeaderContent>
@@ -81,11 +86,13 @@ else
                 <MudTd>@context.HeadCircumferenceCm</MudTd>
                 <MudTd>@(context.Bmi?.ToString("0.00") ?? "-")</MudTd>
                 <MudTd>
-                    <MudButton Size="Size.Small" Color="Color.Error" Variant="Variant.Text"
+                    <MudButton Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined" Style="font-family:Vazirmatn"
                                OnClick="@(() => DeleteMeasurementAsync(context.Id))">
                         حذف
                     </MudButton>
+                    
                 </MudTd>
+
             </RowTemplate>
         </MudTable>
     }
@@ -100,6 +107,7 @@ else
     private Measurement _new = new() { WeightKg = 0, LengthCm = 0, HeadCircumferenceCm = 0 };
     private DateTime? _measuredAt = DateTime.Today;
 
+    
     protected override async Task OnParametersSetAsync()
     {
         await LoadAsync();
